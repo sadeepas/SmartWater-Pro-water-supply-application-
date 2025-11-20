@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SmartWater Pro - System Initializing</title>
+  
+  <!-- External Scripts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+<link rel="icon" href="1.ico" type="image/x-icon">
+
+  <style>
+    /* Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+    /* ==== LOADER STYLES ==== */
+    .loader-body { font-family: 'Poppins', sans-serif; }
+    @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    .parallax-bg { background: linear-gradient(-45deg, #011826, #022c43, #053f5e, #0c7b93); background-size: 400% 400%; animation: gradientShift 18s ease infinite; }
+    @keyframes rise { from { transform: translateY(100vh) scale(0.5); opacity: 0; } to { transform: translateY(-10vh) scale(1); opacity: 0.3; } }
+    .bubble { position: absolute; background-color: rgba(255, 255, 255, 0.1); border-radius: 50%; animation: rise linear infinite; will-change: transform; }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    .loader-card { animation: popIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+    @keyframes revealUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .reveal { animation: revealUp 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; opacity: 0; }
+    .reveal-1 { animation-delay: 0.2s; } .reveal-2 { animation-delay: 0.3s; } .reveal-3 { animation-delay: 0.4s; }
+    .loader-progress-ring-circle { transition: stroke-dashoffset 0.8s ease-out; transform: rotate(-90deg); transform-origin: 50% 50%; }
+    
+    /* ==== MAIN APP STYLES ==== */
+    :root { --bg-primary: #0A0F1A; --bg-secondary: rgba(15, 23, 42, 0.6); --bg-tertiary: rgba(30, 41, 59, 0.7); --bg-interactive: rgba(30, 41, 59, 0.5); --text-primary: #E0EAFC; --text-secondary: #94a3b8; --text-brand: #34d399; --border-primary: rgba(255, 255, 255, 0.1); --border-hover: rgba(255, 255, 255, 0.15); --aurora-1: rgba(16, 185, 129, 0.15); --aurora-2: rgba(79, 70, 229, 0.15); }
+    html[data-theme='light'] { --bg-primary: #f1f5f9; --bg-secondary: rgba(255, 255, 255, 0.6); --bg-tertiary: rgba(226, 232, 240, 0.7); --bg-interactive: rgba(226, 232, 240, 0.5); --text-primary: #1e293b; --text-secondary: #475569; --text-brand: #059669; --border-primary: rgba(0, 0, 0, 0.1); --border-hover: rgba(0, 0, 0, 0.15); --aurora-1: rgba(16, 185, 129, 0.2); --aurora-2: rgba(79, 70, 229, 0.2); }
+    .app-body { font-family: 'Inter', sans-serif; background-color: var(--bg-primary); color: var(--text-primary); transition: background-color 0.3s ease, color 0.3s ease; overflow-x: hidden; }
+    .aurora-background { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: -1; background: radial-gradient(ellipse at 70% 20%, var(--aurora-1) 0%, transparent 50%), radial-gradient(ellipse at 30% 80%, var(--aurora-2) 0%, transparent 50%), var(--bg-primary); animation: pulse-aurora 15s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes pulse-aurora { 0%, 100% { opacity: 0.7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
+    .hud-card { background: var(--bg-secondary); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid var(--border-primary); transition: background 0.3s ease, border 0.3s ease, transform 0.3s ease; }
+    .hud-card:hover { background: var(--bg-tertiary); border-color: var(--border-hover); transform: translateY(-5px); }
+    .animated-item { opacity: 0; transform: translateY(30px); animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+    @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+    .glowing-dot { animation: pulse-dot 2s infinite ease-in-out; }
+    @keyframes pulse-dot { 0%, 100% { box-shadow: 0 0 8px; } 50% { box-shadow: 0 0 20px; } }
+    .pump-active-pulse { animation: pulse-pump 2s infinite ease-in-out; }
+    @keyframes pulse-pump { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    .spinner { border-color: rgba(255,255,255,0.2); border-top-color: white; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: color-mix(in srgb, var(--text-primary) 10%, transparent); border-radius: 5px; outline: none; transition: background 0.3s; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; background: var(--text-primary); border-radius: 50%; cursor: pointer; border: 4px solid var(--text-brand); box-shadow: 0 0 10px color-mix(in srgb, var(--text-brand) 70%, transparent); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); box-shadow: 0 0 20px var(--text-brand); }
+    .input-field { background-color: var(--bg-interactive); border: 1px solid var(--border-primary); color: var(--text-primary); }
+    .input-field:focus { border-color: var(--text-brand); outline: 2px solid transparent; outline-offset: 2px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--text-brand) 30%, transparent); }
+    .input-field.invalid { border-color: #f43f5e; }
+    #log { scrollbar-width: thin; scrollbar-color: var(--text-brand) transparent; }
+    #log::-webkit-scrollbar { width: 6px; } #log::-webkit-scrollbar-track { background: transparent; } #log::-webkit-scrollbar-thumb { background-color: color-mix(in srgb, var(--text-brand) 50%, transparent); border-radius: 20px; } #log::-webkit-scrollbar-thumb:hover { background-color: var(--text-brand); }
+    .progress-ring__circle { transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1); transform: rotate(-90deg); transform-origin: 50% 50%; }
+    .modal-overlay { background-color: rgba(0,0,0,0.7); backdrop-filter: blur(8px); }
+  </style>
+</head>
+
+<body class="flex items-center justify-center min-h-screen overflow-hidden parallax-bg loader-body">
+
+  <!-- ======================= -->
+  <!-- ===== LOADER VIEW ===== -->
+  <!-- ======================= -->
+  <div id="loader-wrapper" class="w-full h-full flex items-center justify-center p-4">
+    <div id="parallax-container" class="absolute inset-0 z-0 transition-transform duration-500 ease-out">
+      <div class="bubble" style="width: 25px; height: 25px; left: 10%; animation-duration: 12s;"></div>
+      <div class="bubble" style="width: 40px; height: 40px; left: 20%; animation-duration: 18s; animation-delay: 3s;"></div>
+      <div class="bubble" style="width: 15px; height: 15px; left: 35%; animation-duration: 9s; animation-delay: 1s;"></div>
+      <div class="bubble" style="width: 50px; height: 50px; left: 55%; animation-duration: 22s; animation-delay: 5s;"></div>
+      <div class="bubble" style="width: 30px; height: 30px; left: 80%; animation-duration: 15s; animation-delay: 2s;"></div>
+      <div class="bubble" style="width: 20px; height: 20px; left: 90%; animation-duration: 10s;"></div>
+    </div>
+    <main id="loader" class="relative z-10 flex flex-col items-center justify-center backdrop-blur-2xl bg-black/20 border border-white/10 rounded-3xl p-8 text-center shadow-2xl max-w-lg w-11/12 loader-card">
+      <div class="relative w-36 h-36 mb-6 flex items-center justify-center">
+        <svg class="absolute inset-0" viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255, 255, 255, 0.1)" stroke-width="4"/><circle id="progress-ring" class="loader-progress-ring-circle" cx="60" cy="60" r="54" fill="none" stroke="url(#loaderProgressGradient)" stroke-width="6" stroke-linecap="round"/><defs><linearGradient id="loaderProgressGradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#38bdf8;stop-opacity:1" /><stop offset="100%" style="stop-color:#67e8f9;stop-opacity:1" /></linearGradient></defs></svg>
+        <div class="w-28 h-28 rounded-full bg-slate-800/50 flex items-center justify-center shadow-inner"><svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14 text-cyan-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 2C12 2 6 9 6 13a6 6 0 0012 0c0-4-6-11-6-11zM12 20v2m-3-2h6" /></svg></div>
+      </div>
+      <h1 class="text-3xl md:text-4xl font-semibold text-white mb-2 reveal reveal-1">Automatic Water Supply</h1>
+      <p class="text-sky-200 text-lg mb-8 reveal reveal-2">System Initializing</p>
+      <p class="text-cyan-300 text-base min-h-[24px] reveal reveal-3" id="progressText">Starting modules...</p>
+    </main>
+  </div>
+
+  <!-- ======================== -->
+  <!-- ===== MAIN APP VIEW ==== -->
+  <!-- ======================== -->
+  <div id="app-container" class="hidden w-full">
+    <div class="aurora-background"></div>
+    <div class="relative max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+      <header class="flex flex-wrap items-center justify-between gap-4 border-b pb-6 mb-8 animated-item" style="animation-delay: 100ms; border-color: var(--border-primary);">
+        <h1 class="text-3xl sm:text-4xl font-bold tracking-wider flex items-center gap-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9" style="color: var(--text-brand);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9.5V6a2 2 0 00-2-2H8a2 2 0 00-2 2v3.5a5.5 5.5 0 1011 0zM12 15a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" /></svg>
+          <span id="header-title" class="bg-clip-text text-transparent bg-gradient-to-r" style="color: var(--text-primary);">SmartWater Pro</span>
+        </h1>
+        <div class="flex items-center gap-3">
+          <button id="theme-toggle" class="p-2.5 rounded-full hover:bg-slate-700/80 border transition-colors" style="border-color: var(--border-primary);" aria-label="Toggle light and dark mode"></button>
+          <button id="btn-connect" class="flex items-center gap-3 px-5 py-2.5 rounded-full bg-slate-800/80 hover:bg-slate-700/80 border active:scale-95 transition-all duration-300 font-semibold text-base shadow-lg shadow-black/30" style="border-color: var(--border-primary);">
+            <div id="connection-status-dot" class="w-3 h-3 rounded-full bg-rose-500 transition-colors"></div>
+            <span id="btn-connect-text">Connect</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <!-- Left Column -->
+        <div class="lg:col-span-2 flex flex-col gap-8">
+          <div class="hud-card rounded-2xl p-6 animated-item" style="animation-delay: 200ms;">
+            <h2 class="font-bold text-2xl mb-5 tracking-wide" style="color: var(--text-brand);">Live Status</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6">
+              <div class="p-4 rounded-xl ring-1 text-center flex flex-col items-center justify-center gap-2" style="background-color: var(--bg-interactive); border-color: var(--border-primary);">
+                <div class="relative w-40 h-40">
+                  <svg class="w-full h-full" viewBox="0 0 100 100">
+                    <defs><linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#34d399;" /><stop offset="100%" style="stop-color:#22d3ee;" /></linearGradient></defs>
+                    <circle class="text-slate-400 dark:text-slate-700" stroke-width="8" stroke="currentColor" fill="transparent" r="44" cx="50" cy="50"/>
+                    <circle id="progress-circle" class="progress-ring__circle" stroke-width="8" stroke-linecap="round" stroke="url(#progressGradient)" fill="transparent" r="44" cx="50" cy="50"/>
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="text-4xl font-extrabold tracking-tighter"><span id="lbl-soil">—</span></span><span class="text-xs uppercase tracking-widest" style="color: var(--text-secondary);">Moisture</span></div>
+                </div>
+              </div>
+              <div class="p-4 rounded-xl ring-1 text-center transition-all duration-300 flex flex-col items-center justify-center gap-2" style="background-color: var(--bg-interactive); border-color: var(--border-primary);">
+                  <div id="pump-icon" class="relative w-24 h-24 rounded-full bg-slate-300 dark:bg-slate-800 flex items-center justify-center transition-all duration-500 border-4 border-slate-400 dark:border-slate-700">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 transition-colors duration-300 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+                  </div>
+                  <div class="text-3xl font-bold mt-2"><span id="lbl-pump">OFF</span></div>
+                  <div class="text-sm uppercase tracking-widest" style="color: var(--text-secondary);">Pump Status</div>
+              </div>
+            </div>
+          </div>
+          <div class="hud-card rounded-2xl p-6 animated-item" style="animation-delay: 300ms;">
+            <h2 class="font-bold text-2xl mb-5 tracking-wide" style="color: var(--text-brand);">Manual Controls</h2>
+            <div id="manual-controls" class="flex flex-col gap-4">
+              <button class="control-btn w-full flex items-center justify-center gap-3 text-lg font-bold py-3.5 rounded-lg transition-all duration-300 active:scale-[0.98] transform hover:-translate-y-1 bg-gradient-to-br from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 disabled:opacity-50 disabled:cursor-not-allowed" data-command="ON" aria-label="Turn Pump On"><div class="spinner w-6 h-6 rounded-full border-2 hidden"></div><span class="btn-text">Pump ON</span></button>
+              <button class="control-btn w-full flex items-center justify-center gap-3 text-lg font-bold py-3.5 rounded-lg transition-all duration-300 active:scale-[0.98] transform hover:-translate-y-1 bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-lg shadow-rose-500/20 hover:shadow-rose-500/40 disabled:opacity-50 disabled:cursor-not-allowed" data-command="OFF" aria-label="Turn Pump Off"><div class="spinner w-6 h-6 rounded-full border-2 hidden"></div><span class="btn-text">Pump OFF</span></button>
+              <button class="control-btn w-full flex items-center justify-center gap-3 text-lg font-bold py-3.5 rounded-lg transition-all duration-300 active:scale-[0.98] transform hover:-translate-y-1 bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 disabled:opacity-50 disabled:cursor-not-allowed" data-command="WATER_NOW:30" aria-label="Water for 30 seconds"><div class="spinner w-6 h-6 rounded-full border-2 hidden"></div><span class="btn-text">Water Now (30s)</span></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="lg:col-span-3 flex flex-col gap-8">
+          <div class="hud-card rounded-2xl p-6 animated-item" style="animation-delay: 400ms;">
+             <h2 class="font-bold text-2xl mb-4 tracking-wide" style="color: var(--text-brand);">Moisture History (1hr)</h2>
+             <div class="h-48"><canvas id="moisture-chart"></canvas></div>
+          </div>
+          <div class="hud-card rounded-2xl p-6 animated-item" style="animation-delay: 500ms;">
+            <h2 class="font-bold text-2xl mb-6 tracking-wide" style="color: var(--text-brand);">Configuration</h2>
+            <div class="space-y-6">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label for="rng-threshold" class="text-base flex justify-between items-center"><span>Dry Threshold</span><span id="lbl-threshold" class="text-xl font-bold bg-slate-200 dark:bg-slate-700/50 px-3 py-1 rounded-md" style="color: var(--text-brand);">1500</span></label>
+                  <div class="flex items-center gap-4 mt-2"><input id="rng-threshold" type="range" min="0" max="4095" value="1500" class="w-full"></div>
+                </div>
+                <div id="flow-row" class="opacity-0 transition-opacity duration-500">
+                  <label for="rng-flow" class="text-base flex justify-between items-center"><span>Flow Power</span><span id="lbl-flow" class="text-xl font-bold bg-slate-200 dark:bg-slate-700/50 px-3 py-1 rounded-md" style="color: var(--text-brand);">80%</span></label>
+                  <div class="flex items-center gap-4 mt-2"><input id="rng-flow" type="range" min="0" max="100" value="80" class="w-full"></div>
+                </div>
+              </div>
+              <hr style="border-color: var(--border-primary);"/>
+              <h3 class="font-semibold text-xl tracking-wide pt-2">Daily Schedule</h3>
+              <label class="flex items-center justify-between gap-3 cursor-pointer"><span class="text-lg font-medium">Enable Schedule</span><div class="relative"><input id="chk-enable-sched" type="checkbox" class="sr-only peer" role="switch" aria-checked="false"><div class="w-14 h-8 bg-slate-300 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500 after:shadow-md"></div></div></label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div><label for="time-start" class="text-sm uppercase tracking-wider" style="color: var(--text-secondary);">Start Time</label><input id="time-start" type="time" value="06:00" class="input-field w-full mt-1.5 px-4 py-2.5 rounded-lg text-lg ring-1 focus:outline-none transition"></div>
+                <div><label for="num-duration" class="text-sm uppercase tracking-wider" style="color: var(--text-secondary);">Duration (sec)</label><input id="num-duration" type="number" min="5" max="3600" value="60" class="input-field w-full mt-1.5 px-4 py-2.5 rounded-lg text-lg ring-1 focus:outline-none transition" aria-describedby="duration-error"><p id="duration-error" class="text-rose-400 text-sm mt-1 hidden">Must be between 5 and 3600.</p></div>
+              </div>
+              <div><label class="text-sm uppercase tracking-wider" style="color: var(--text-secondary);">Repeat on Days</label><div id="days" class="grid grid-cols-7 gap-2 mt-2" role="group" aria-label="Select days of the week"></div></div>
+              <div class="pt-2 flex items-center gap-4">
+                <button id="btn-save" class="flex items-center justify-center gap-3 px-7 py-3 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base transition-all duration-300 active:scale-95 transform hover:-translate-y-0.5 shadow-lg shadow-emerald-900/50 disabled:opacity-50 disabled:cursor-not-allowed"><div class="spinner w-6 h-6 rounded-full border-2 hidden"></div><span class="btn-text">Save Settings</span></button>
+                <span id="status-save" class="text-lg transition-all duration-300 opacity-0" style="color: var(--text-brand);">✓ Settings Saved</span>
+              </div>
+            </div>
+          </div>
+        </div>
+         <div class="lg:col-span-5 hud-card rounded-2xl p-6 animated-item" style="animation-delay: 600ms;">
+            <h3 class="font-bold text-2xl mb-4 tracking-wide" style="color: var(--text-brand);">Event Log</h3>
+            <div id="log" class="h-48 overflow-auto text-sm p-4 rounded-xl ring-1 space-y-2 font-mono" style="background-color: var(--bg-interactive); border-color: var(--border-primary);" role="log" aria-live="polite"></div>
+          </div>
+      </main>
+    </div>
+
+    <!-- Connection Modal -->
+    <div id="connection-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div id="modal-content" class="hud-card relative rounded-2xl p-8 w-full max-w-md text-center transform scale-95 opacity-0 transition-all duration-300">
+            <button id="btn-close-modal" class="absolute top-3 right-3 p-2 rounded-full transition-colors hover:bg-slate-500/20" aria-label="Close connection manager">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <h3 id="modal-title" class="text-2xl font-bold mb-4">Connection Manager</h3>
+            <p id="modal-body" class="mb-6" style="color: var(--text-secondary);">Choose how to connect to your SmartWater Pro device.</p>
+            <div id="modal-actions" class="flex flex-col gap-4">
+                <button id="connect-ble" class="w-full flex items-center justify-center gap-3 text-lg font-bold py-3.5 rounded-lg transition-all duration-300 active:scale-[0.98] transform hover:-translate-y-1 bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/20 hover:shadow-sky-500/40">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M14.707 5.293a1 1 0 010 1.414L11.414 10l3.293 3.293a1 1 0 01-1.414 1.414L10 11.414l-3.293 3.293a1 1 0 01-1.414-1.414L8.586 10 5.293 6.707a1 1 0 011.414-1.414L10 8.586l3.293-3.293a1 1 0 011.414 0z"/></svg>
+                    Connect with Bluetooth
+                </button>
+                <div class="my-2 text-sm uppercase" style="color: var(--text-secondary);">Or</div>
+                <div id="ws-form" class="flex flex-col gap-3">
+                    <input id="ws-ip-input" type="text" placeholder="Enter ESP32 IP Address" class="input-field w-full px-4 py-3.5 rounded-lg text-lg ring-1 focus:outline-none transition text-center" value="192.168.1.123">
+                    <button id="connect-ws" class="w-full flex items-center justify-center gap-3 text-lg font-bold py-3.5 rounded-lg transition-all duration-300 active:scale-[0.98] transform hover:-translate-y-1 bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C3.732 4.143 10 4.143 16.268 10c-3.268 5.857-9.536 5.857-12.81 0zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>
+                        Connect with Wi-Fi
+                    </button>
+                </div>
+                 <button id="run-demo" class="mt-4 text-sm font-semibold hover:underline" style="color: var(--text-secondary);">Run in Demo Mode</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="backdrop-blur-md bg-white/10 border-t border-white/20 text-gray-200 py-6 text-center mt-8">
+      <p class="text-sm drop-shadow-md mb-2">Developed by <span class="font-semibold text-white">Sadeepa Lakshan</span></p>
+      <div class="flex justify-center space-x-6 mb-2">
+        <a href="https://github.com/sadeepas" target="_blank" class="hover:text-white transition"><i class="fab fa-github text-xl"></i></a>
+        <a href="https://www.linkedin.com/in/sadeepa-lakshan/" target="_blank" class="hover:text-white transition"><i class="fab fa-linkedin text-xl"></i></a>
+        <a href="mailto:sadeepapemasiri2@gmai.com" class="hover:text-white transition"><i class="fas fa-envelope text-xl"></i></a>
+      </div>
+      <p class="text-xs text-gray-300 drop-shadow-sm">© <span id="year"></span> All Rights Reserved</p>
+    </footer>
+  </div>
+
+<script>
+// LOADER SCRIPT
+document.addEventListener('DOMContentLoaded', () => {
+    const steps = ["Calibrating sensors...", "Connecting to pumps...", "Configuring relays...", "Verifying tank levels...", "System is now ready!"];
+    const progressText = document.getElementById("progressText"), loaderWrapper = document.getElementById("loader-wrapper"), progressRing = document.getElementById("progress-ring"), radius = progressRing.r.baseVal.value, circumference = 2 * Math.PI * radius;
+    progressRing.style.strokeDasharray = `${circumference} ${circumference}`;
+    progressRing.style.strokeDashoffset = circumference;
+    function setProgress(percent) { progressRing.style.strokeDashoffset = circumference - (percent / 100) * circumference; }
+    let currentStep = 0; setProgress(0);
+    function updateStatus() {
+        progressText.textContent = steps[currentStep]; setProgress(((currentStep + 1) / steps.length) * 100);
+        if (currentStep < steps.length - 1) { currentStep++; setTimeout(updateStatus, 1000); } 
+        else {
+            setTimeout(() => {
+                loaderWrapper.classList.add("transition-opacity", "duration-1000", "ease-in", "opacity-0");
+                loaderWrapper.addEventListener('transitionend', () => {
+                    loaderWrapper.remove(); document.title = "SmartWater Pro";
+                    document.body.className = 'app-body min-h-screen antialiased';
+                    document.getElementById('app-container').classList.remove('hidden');
+                    // Show connection modal after loader finishes
+                    const modal = document.getElementById('connection-modal');
+                    const modalContent = document.getElementById('modal-content');
+                    modal.classList.remove('hidden');
+                    setTimeout(() => modalContent.classList.remove('scale-95', 'opacity-0'), 50);
+                }, { once: true });
+            }, 1200);
+        }
+    }
+    setTimeout(updateStatus, 500);
+    const parallaxContainer = document.getElementById("parallax-container");
+    if (window.matchMedia("(min-width: 768px)").matches) { document.addEventListener("mousemove", (e) => { if(parallaxContainer) { const { clientX, clientY } = e; const x = (clientX / window.innerWidth - 0.5) * -40, y = (clientY / window.innerHeight - 0.5) * -40; parallaxContainer.style.transform = `translate(${x}px, ${y}px)`; } }); }
+});
+
+// MAIN APP SCRIPT
+(() => {
+    class SmartWaterApp {
+        constructor() {
+            this.ble = { SVC_UUID: "e0b3d0a0-9f3c-4b1c-a9a4-9a1dfb2a9c01", CHR_SOIL: "e0b3d0a1-9f3c-4b1c-a9a4-9a1dfb2a9c01", CHR_STATE: "e0b3d0a2-9f3c-4b1c-a9a4-9a1dfb2a9c01", CHR_CFG: "e0b3d0a3-9f3c-4b1c-a9a4-9a1dfb2a9c01", CHR_CMD: "e0b3d0a4-9f3c-4b1c-a9a4-9a1dfb2a9c01", CHR_LOG: "e0b3d0a5-9f3c-4b1c-a9a4-9a1dfb2a9c01", CHR_SCHED: "e0b3d0a6-9f3c-4b1c-a9a4-9a1dfb2a9c01", device: null, server: null, service: null, characteristics: {} };
+            this.ws = { connection: null };
+            this.ui = {};
+            this.state = { connectionType: null, isConnected: false, isDemoMode: false, isBusy: false, demoInterval: null };
+            this.chart = null; this.chartData = { labels: [], datasets: [{ label: 'Moisture', data: [], borderColor: '#34d399', backgroundColor: 'rgba(52, 211, 153, 0.2)', fill: true, tension: 0.4 }] };
+            document.addEventListener('DOMContentLoaded', () => this.init());
+        }
+
+        init() {
+            this.cacheDOMElements(); this.initTheme(); this.initChart(); this.buildDayButtons(); this.bindUIEvents();
+            const radius = this.ui['progress-circle'].r.baseVal.value; this.ui.circumference = 2 * Math.PI * radius; this.ui['progress-circle'].style.strokeDasharray = `${this.ui.circumference} ${this.ui.circumference}`;
+            this.updateSoilMoisture(0); this.setDaysFromMask(0b0101010); this.addLog('Interface loaded. Ready to connect.');
+            document.getElementById("year").textContent = new Date().getFullYear();
+        }
+
+        cacheDOMElements() {
+            const ids = [ 'btn-connect', 'btn-connect-text', 'connection-status-dot', 'lbl-soil', 'lbl-pump', 'pump-icon', 'progress-circle', 'lbl-threshold', 'rng-threshold', 'rng-flow', 'lbl-flow', 'flow-row', 'log', 'status-save', 'days', 'btn-save', 'chk-enable-sched', 'time-start', 'num-duration', 'theme-toggle', 'moisture-chart', 'manual-controls', 'duration-error', 'header-title', 'connection-modal', 'modal-content', 'connect-ble', 'connect-ws', 'ws-ip-input', 'run-demo', 'btn-close-modal' ];
+            ids.forEach(id => this.ui[id] = document.getElementById(id));
+        }
+        
+        initTheme() {
+            const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>`;
+            const moonIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>`;
+            const applyTheme = (theme) => { if (theme === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); document.documentElement.classList.add('dark'); this.ui['theme-toggle'].innerHTML = sunIcon; } else { document.documentElement.setAttribute('data-theme', 'light'); document.documentElement.classList.remove('dark'); this.ui['theme-toggle'].innerHTML = moonIcon; } this.updateChartTheme(theme); };
+            this.ui['theme-toggle'].addEventListener('click', () => { const newTheme = (document.documentElement.getAttribute('data-theme') || 'dark') === 'dark' ? 'light' : 'dark'; localStorage.setItem('theme', newTheme); applyTheme(newTheme); });
+            applyTheme(localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+        }
+
+        initChart() {
+            this.chart = new Chart(this.ui['moisture-chart'].getContext('2d'), { type: 'line', data: this.chartData, options: { responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { min: 0, max: 4095, display: false } }, plugins: { legend: { display: false } } } });
+        }
+        
+        updateChartTheme(theme) {
+            if (!this.chart) return; const isDark = theme === 'dark';
+            this.chart.options.scales.x.grid.color = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            this.chart.options.scales.y.grid.color = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            this.chart.options.scales.y.ticks.color = isDark ? '#E0EAFC' : '#1e293b';
+            this.chart.update();
+        }
+
+        buildDayButtons() {
+            const dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            this.ui.days.innerHTML = dayNames.map((name, i) => `<button class="aspect-square w-full rounded-lg text-lg font-bold transition-all duration-200 border transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-400" data-day-index="${i}" aria-pressed="false">${name}</button>`).join('');
+        }
+        
+        bindUIEvents() {
+            this.ui['btn-connect'].onclick = () => this.showConnectionModal();
+            this.ui['connect-ble'].onclick = () => this.connectBLE();
+            this.ui['connect-ws'].onclick = () => this.connectWebSocket();
+            this.ui['run-demo'].onclick = () => this.startDemoMode();
+            this.ui['btn-close-modal'].onclick = () => this.hideConnectionModal();
+
+            this.ui['rng-threshold'].oninput = () => this.ui['lbl-threshold'].textContent = this.ui['rng-threshold'].value;
+            this.ui['rng-flow'].oninput = () => this.ui['lbl-flow'].textContent = `${this.ui['rng-flow'].value}%`;
+            this.ui['btn-save'].onclick = () => this.writeConfig();
+            this.ui['num-duration'].oninput = () => this.validateInputs();
+            
+            this.ui.days.addEventListener('click', (e) => {
+                const button = e.target.closest('button'); if (!button) return;
+                const isPressed = button.getAttribute('aria-pressed') === 'true'; button.setAttribute('aria-pressed', !isPressed);
+                this.updateDayButtonStyles();
+            });
+            
+            this.ui['manual-controls'].addEventListener('click', async (e) => {
+                const button = e.target.closest('.control-btn'); if (!button || this.state.isBusy) return;
+                this.setBusyState(button, true); try { await this.sendCommand(button.dataset.command); } finally { this.setBusyState(button, false); }
+            });
+        }
+        
+        showConnectionModal() {
+            if (this.state.isConnected) {
+                this.disconnect();
+            } else {
+                this.ui['connection-modal'].classList.remove('hidden');
+                setTimeout(() => this.ui['modal-content'].classList.remove('scale-95', 'opacity-0'), 10);
+            }
+        }
+        
+        hideConnectionModal() {
+            this.ui['modal-content'].classList.add('scale-95', 'opacity-0');
+            this.ui['connection-modal'].addEventListener('transitionend', () => {
+                this.ui['connection-modal'].classList.add('hidden');
+            }, { once: true });
+        }
+
+        async connectBLE() {
+            this.hideConnectionModal();
+            this.updateConnectionStatus('connecting-ble');
+            if (!navigator.bluetooth) { this.addLog('Web Bluetooth not supported.', 'error'); this.updateConnectionStatus('failed'); return; }
+
+            try {
+                this.addLog('Requesting Bluetooth device...');
+                this.ble.device = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: 'ESP32 Watering' }], optionalServices: [this.ble.SVC_UUID] });
+                this.ble.device.addEventListener('gattserverdisconnected', () => this.onDisconnect());
+                this.addLog('Connecting to GATT server...');
+                this.ble.server = await this.ble.device.gatt.connect();
+                this.ble.service = await this.ble.server.getPrimaryService(this.ble.SVC_UUID);
+                this.addLog('Getting characteristics...');
+                const chrIds = { soil: 'CHR_SOIL', state: 'CHR_STATE', cfg: 'CHR_CFG', cmd: 'CHR_CMD', log: 'CHR_LOG', sched: 'CHR_SCHED' };
+                for (const name in chrIds) { this.ble.characteristics[name] = await this.ble.service.getCharacteristic(this.ble[chrIds[name]]); }
+                await this.startNotifications();
+                this.addLog('Reading initial configuration...');
+                await new Promise(r => setTimeout(r, 200)); // Delay for characteristics to stabilize
+                const sched = await this.ble.characteristics.sched.readValue();
+                this.applyConfig(sched); 
+                this.updateConnectionStatus('connected-ble');
+                this.addLog('Connected successfully via Bluetooth.');
+            } catch (err) { this.addLog(`BLE error: ${err.message}`, 'error'); this.updateConnectionStatus('failed'); }
+        }
+
+        connectWebSocket() {
+            this.hideConnectionModal();
+            this.updateConnectionStatus('connecting-ws');
+            const ip = this.ui['ws-ip-input'].value;
+            if (!ip) { this.addLog('IP Address is required.', 'error'); this.updateConnectionStatus('failed'); return; }
+            
+            this.ws.connection = new WebSocket(`ws://${ip}/ws`);
+            this.ws.connection.onopen = () => {
+                this.updateConnectionStatus('connected-ws');
+                this.addLog(`Connected successfully via WebSocket to ${ip}.`);
+                this.sendCommand('GET_CONFIG');
+            };
+            this.ws.connection.onmessage = (event) => this.handleWebSocketMessage(event.data);
+            this.ws.connection.onclose = () => this.onDisconnect();
+            this.ws.connection.onerror = (err) => { this.addLog('WebSocket error.', 'error'); this.updateConnectionStatus('failed'); };
+        }
+        
+        handleWebSocketMessage(data) {
+            try {
+                const json = JSON.parse(data);
+                switch(json.type) {
+                    case 'log': this.addLog(json.payload); break;
+                    case 'soil': this.updateSoilMoisture(json.payload); break;
+                    case 'state': this.updatePumpState(json.payload.pumpOn, json.payload.flow); break;
+                    case 'config': this.applyConfig(json.payload); break;
+                }
+            } catch (e) { this.addLog(`Received raw data: ${data}`); }
+        }
+
+        async startNotifications() {
+            const notifications = ['soil', 'state', 'log'];
+            for (const type of notifications) {
+                await this.ble.characteristics[type].startNotifications();
+                this.ble.characteristics[type].addEventListener('characteristicvaluechanged', e => {
+                    if (type === 'soil') this.updateSoilMoisture(e.target.value.getUint16(0, true));
+                    else if (type === 'state') this.updatePumpState(e.target.value.getUint8(0) === 1, e.target.value.getUint8(1));
+                    else if (type === 'log') this.addLog(new TextDecoder().decode(e.target.value));
+                });
+            }
+        }
+        
+        startDemoMode() {
+            this.hideConnectionModal();
+            if (this.state.demoInterval) clearInterval(this.state.demoInterval);
+            this.state.isDemoMode = true;
+            this.updateConnectionStatus('demo');
+            this.addLog('Demo mode started.');
+            this.ui['flow-row'].classList.remove('opacity-0');
+            let demoMoisture = 2500, pumpOn = false, trend = -1;
+            this.state.demoInterval = setInterval(() => {
+                demoMoisture += (Math.random() * 50 + 20) * trend;
+                if (demoMoisture < 1000) trend = 1;
+                if (demoMoisture > 3500) trend = -1;
+                this.updateSoilMoisture(Math.round(demoMoisture));
+                const threshold = parseInt(this.ui['rng-threshold'].value, 10);
+                if (demoMoisture > threshold + 100 && pumpOn) { pumpOn = false; this.updatePumpState(false, 0); this.addLog('DEMO: Moisture level OK. Pump stopped.', 'info'); trend = -1; } 
+                else if (demoMoisture < threshold - 100 && !pumpOn) { pumpOn = true; this.updatePumpState(true, parseInt(this.ui['rng-flow'].value, 10)); this.addLog('DEMO: Low moisture detected! Pump started.', 'cmd'); trend = 1; }
+            }, 2000);
+        }
+
+        async sendCommand(cmd) {
+            if (this.state.isDemoMode) {
+                this.addLog(`DEMO: Command sent: ${cmd}`, 'cmd');
+                if (cmd === 'ON') this.updatePumpState(true, parseInt(this.ui['rng-flow'].value, 10));
+                else if (cmd === 'OFF') this.updatePumpState(false, 0);
+                else if (cmd.startsWith('WATER_NOW')) { this.updatePumpState(true, 100); setTimeout(() => { this.updatePumpState(false, 0); this.addLog('DEMO: Pulse watering complete.'); }, 5000); }
+                return;
+            }
+            if (!this.state.isConnected) { this.addLog('Not connected.', 'error'); return; }
+            try {
+                if (this.state.connectionType === 'ble') {
+                    await this.ble.characteristics.cmd.writeValueWithoutResponse(new TextEncoder().encode(cmd));
+                } else if (this.state.connectionType === 'ws') {
+                    this.ws.connection.send(JSON.stringify({type: 'command', payload: cmd}));
+                }
+                this.addLog(`Command sent: ${cmd}`, 'cmd');
+            } catch (err) { this.addLog(`Failed to send command: ${err.message}`, 'error'); }
+        }
+        
+        async writeConfig() {
+            if (!this.validateInputs()) return;
+            this.setBusyState(this.ui['btn-save'], true);
+
+            try {
+                const config = {
+                    threshold: parseInt(this.ui['rng-threshold'].value, 10),
+                    flow: parseInt(this.ui['rng-flow'].value, 10),
+                    startTime: this.ui['time-start'].value,
+                    duration: parseInt(this.ui['num-duration'].value, 10),
+                    dayMask: this.getDaysMask(),
+                    schedEnabled: this.ui['chk-enable-sched'].checked
+                };
+                
+                if (this.state.isDemoMode) { this.addLog('DEMO: Settings saved.', 'cmd'); await new Promise(r => setTimeout(r, 1000)); this.showStatusMessage(this.ui['status-save'], '✓ Settings Saved'); return; }
+                if (!this.state.isConnected) { this.addLog('Not connected.', 'error'); return; }
+                
+                if (this.state.connectionType === 'ble') {
+                    const [hh, mm] = config.startTime.split(':').map(Number);
+                    const schedBuffer = new ArrayBuffer(9); const schedView = new DataView(schedBuffer);
+                    schedView.setUint16(0, config.threshold, true); schedView.setUint8(2, config.flow); schedView.setUint8(3, hh);
+                    schedView.setUint8(4, mm); schedView.setUint16(5, config.duration, true); schedView.setUint8(7, config.dayMask);
+                    schedView.setUint8(8, config.schedEnabled ? 1 : 0);
+                    await this.ble.characteristics.sched.writeValueWithoutResponse(schedBuffer);
+                } else if (this.state.connectionType === 'ws') {
+                    this.ws.connection.send(JSON.stringify({type: 'config', payload: config}));
+                }
+
+                this.addLog('Settings saved to device.', 'cmd');
+                this.showStatusMessage(this.ui['status-save'], '✓ Settings Saved');
+            } catch (err) { this.addLog(`Failed to save settings: ${err.message}`, 'error'); } 
+            finally { this.setBusyState(this.ui['btn-save'], false); }
+        }
+        
+        applyConfig(data) {
+            let config;
+            if (data instanceof DataView) { // From BLE
+                 const [hh, mm] = [data.getUint8(3), data.getUint8(4)];
+                 config = {
+                    threshold: data.getUint16(0, true),
+                    flow: data.getUint8(2),
+                    startTime: `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`,
+                    duration: data.getUint16(5, true),
+                    dayMask: data.getUint8(7),
+                    schedEnabled: data.getUint8(8) === 1,
+                };
+            } else { // From WebSocket
+                config = data;
+            }
+
+            this.ui['rng-threshold'].value = config.threshold; this.ui['lbl-threshold'].textContent = config.threshold;
+            this.ui['rng-flow'].value = config.flow; this.ui['lbl-flow'].textContent = `${config.flow}%`;
+            this.ui['time-start'].value = config.startTime;
+            this.ui['num-duration'].value = config.duration;
+            this.setDaysFromMask(config.dayMask);
+            this.ui['chk-enable-sched'].checked = config.schedEnabled;
+            this.ui['flow-row'].classList.remove('opacity-0');
+        }
+
+        updateConnectionStatus(status) {
+            const dot = this.ui['connection-status-dot'];
+            const text = this.ui['btn-connect-text'];
+            
+            dot.classList.remove('bg-rose-500', 'bg-yellow-500', 'bg-emerald-400', 'glowing-dot');
+            this.state.isConnected = false;
+
+            switch(status) {
+                case 'connecting-ble': text.textContent = 'Connecting...'; dot.classList.add('bg-yellow-500'); break;
+                case 'connecting-ws': text.textContent = 'Connecting...'; dot.classList.add('bg-yellow-500'); break;
+                case 'connected-ble': this.state.isConnected = true; this.state.connectionType = 'ble'; text.textContent = 'Disconnect'; dot.classList.add('bg-emerald-400', 'glowing-dot'); break;
+                case 'connected-ws': this.state.isConnected = true; this.state.connectionType = 'ws'; text.textContent = 'Disconnect'; dot.classList.add('bg-emerald-400', 'glowing-dot'); break;
+                case 'demo': this.state.isConnected = true; this.state.connectionType = 'demo'; text.textContent = 'End Demo'; dot.classList.add('bg-emerald-400', 'glowing-dot'); break;
+                case 'failed': text.textContent = 'Connect'; dot.classList.add('bg-rose-500'); break;
+                default: text.textContent = 'Connect'; dot.classList.add('bg-rose-500'); this.state.connectionType = null;
+            }
+        }
+
+        updateSoilMoisture(value) {
+            this.ui['lbl-soil'].textContent = value;
+            const percent = Math.min(100, Math.max(0, (value / 4095) * 100));
+            this.ui['progress-circle'].style.strokeDashoffset = this.ui.circumference - (percent / 100) * this.ui.circumference;
+            if (this.chartData.labels.length > 180) { this.chartData.labels.shift(); this.chartData.datasets[0].data.shift(); }
+            this.chartData.labels.push(new Date().toLocaleTimeString()); this.chartData.datasets[0].data.push(value);
+            if(this.chart) this.chart.update('quiet');
+        }
+
+        updatePumpState(isOn, flow) {
+            this.ui['lbl-pump'].textContent = isOn ? `${flow}%` : 'OFF';
+            const icon = this.ui['pump-icon'];
+            icon.classList.toggle('border-indigo-500', isOn); icon.classList.toggle('dark:border-indigo-500', isOn);
+            icon.classList.toggle('shadow-indigo-500/50', isOn); icon.classList.toggle('pump-active-pulse', isOn);
+            icon.querySelector('svg').classList.toggle('text-indigo-400', isOn);
+        }
+
+        addLog(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const typeMap = { error: { color: 'text-rose-400', icon: '✖' }, cmd: { color: 'text-indigo-400', icon: '»' }, info: { color: 'text-slate-400', icon: '•' } };
+            const { color, icon } = typeMap[type] || typeMap.info;
+            const entry = document.createElement('div'); entry.className = 'animated-item'; entry.style.animationDelay = '0ms';
+            entry.innerHTML = `<span class="text-slate-500 mr-2">${time}</span><span class="mr-2 ${color}">${icon}</span><span class="${color}">${message}</span>`;
+            this.ui.log.prepend(entry);
+        }
+        
+        onDisconnect() {
+            if (this.state.isDemoMode) { if (this.state.demoInterval) clearInterval(this.state.demoInterval); this.state.demoInterval = null; this.state.isDemoMode = false; }
+            this.updateConnectionStatus('disconnected');
+            this.addLog('Device disconnected.', 'error');
+            this.updateSoilMoisture(0); this.updatePumpState(false, 0); this.ui['lbl-soil'].textContent = '—';
+            this.ui['flow-row'].classList.add('opacity-0');
+            this.showConnectionModal();
+        }
+        
+        disconnect() {
+            if (this.state.connectionType === 'ble' && this.ble.device) this.ble.device.gatt.disconnect();
+            else if (this.state.connectionType === 'ws' && this.ws.connection) this.ws.connection.close();
+            else if (this.state.isDemoMode) this.onDisconnect();
+        }
+
+        /* ===== Helper Functions ===== */
+        setBusyState(button, isBusy) { this.state.isBusy = isBusy; button.disabled = isBusy; button.querySelector('.spinner').classList.toggle('hidden', !isBusy); button.querySelector('.btn-text').classList.toggle('hidden', isBusy); }
+        showStatusMessage(element, message) { element.textContent = message; element.classList.remove('opacity-0'); setTimeout(() => element.classList.add('opacity-0'), 2500); }
+        validateInputs() { let isValid = true; const duration = parseInt(this.ui['num-duration'].value, 10); if (isNaN(duration) || duration < 5 || duration > 3600) { this.ui['num-duration'].classList.add('invalid'); this.ui['duration-error'].classList.remove('hidden'); isValid = false; } else { this.ui['num-duration'].classList.remove('invalid'); this.ui['duration-error'].classList.add('hidden'); } return isValid; }
+        getDaysMask() { return Array.from(this.ui.days.querySelectorAll('button')).reduce((mask, btn) => btn.getAttribute('aria-pressed') === 'true' ? mask | (1 << btn.dataset.dayIndex) : mask, 0); }
+        setDaysFromMask(mask) { this.ui.days.querySelectorAll('button').forEach((button) => { button.setAttribute('aria-pressed', ((mask >> button.dataset.dayIndex) & 1) ? 'true' : 'false'); }); this.updateDayButtonStyles(); }
+        updateDayButtonStyles() { const off = "bg-slate-200 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-emerald-500 hover:text-emerald-500 dark:hover:text-white"; const on = "bg-gradient-to-br from-emerald-500 to-teal-400 border-emerald-400 text-white shadow-lg shadow-emerald-500/20"; this.ui.days.querySelectorAll('button').forEach(b => { const base = b.className.split(' ').slice(0, 9).join(' '); b.className = `${base} ${b.getAttribute('aria-pressed') === 'true' ? on : off}`; }); }
+    }
+    new SmartWaterApp();
+})();
+</script>
+
+</body>
+</html>
